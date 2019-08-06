@@ -1,33 +1,17 @@
-import io from 'socket.io-client';
+io = require('socket.io-client')
 
-const socket = io('http://localhost:5000');
-console.log("socket");
+let socket = io()
 
-// (function() {
-//   // Define Constructor
-//   this.AVS = function() {
-//     const defaults = {
-//       site_id: '1'
-//     };
-//     if (arguments[0] && typeof arguments[0] === "object") {
-//       this.options = extendDefaults(defaults, arguments[0]);
-//     }
-//   }
-//   // Public Methods
-//   AVS.prototype.init = function() {
-//     // initialize session here based on site, all peers will connect to this session id,
-    
-//     // return a session id
+class AVS {
 
-//   }
-//   // Private Methods
-//   function extendDefaults(source, properties) {
-//     var property;
-//     for (property in properties) {
-//       if (properties.hasOwnProperty(property)) {
-//         source[property] = properties[property];
-//       }
-//     }
-//     return source;
-//   }
-// }());
+  _version = 0.01;
+
+  /* 
+    This function can be called to create a session, it should return a random id, and have socket connected to it.
+  */
+  startSession() {
+    console.log("hello");
+  }
+}
+
+module.exports = AVS
