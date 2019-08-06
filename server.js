@@ -1,20 +1,10 @@
 var Turn = require('node-turn');
-var app = require('http').createServer({
-  host: '0.0.0.0'
-})
-var io = require('socket.io')(app);
 
-var server = new Turn({
-  listeningIps: ['192.168.0.11'],
-  authMech: 'long-term',
-  credentials: {
-    username: "password"
-  }
-});
-server.start();
-console.log('server started');
+var app = require('express')();
+var http = require('http').createServer(app);
+var io = require('socket.io')(http);
 
-app.listen(5000);
+app.use(express.static('public'));
 
 io.on('connection', function(socket){
   console.log(socket.id+' connected');
@@ -35,4 +25,26 @@ io.on('connection', function(socket){
     console.log(message);
     io.emit('answer', message);
   });
+});
+
+/* 
+  Start STUN/TURN Server
+*/
+(function() {
+  var server = new Turn({
+    listeningIps: ['192.168.0.11'],
+    authMech: 'long-term',
+    credentials: {
+      username: "password"
+    }
+  });
+  server.start();
+  console.log('stun/turn server listening on *:3478');
+})();
+
+/* 
+  Start Express Server
+*/
+http.listen(5000, () => {
+  console.log('express server listening on *:5000');
 });
