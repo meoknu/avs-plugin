@@ -1,6 +1,6 @@
 var Turn = require('node-turn');
-
-var app = require('express')();
+var express = require('express')
+var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 
@@ -39,12 +39,12 @@ io.on('connection', function(socket){
     }
   });
   server.start();
-  console.log('stun/turn server listening on *:3478');
+  console.log('TURN server listening on *:3478');
 })();
 
 /* 
   Start Express Server
 */
 http.listen(5000, () => {
-  console.log('express server listening on *:5000');
+  console.log('HTTP server listening on *:5000');
 });
