@@ -10,9 +10,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "babel-loader": "^8.0.6",
+    "core-js": "^2.6.9",
     "express": "^4.17.1",
     "node-turn": "0.0.4",
-    "babel-loader": "^8.0.6",
+    "remove": "^0.1.5",
     "socket.io": "^2.2.0"
   },
   "devDependencies": {
@@ -20,7 +22,9 @@
     "@babel/core": "^7.5.5",
     "@babel/node": "^7.5.5",
     "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/plugin-transform-runtime": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
+    "@babel/runtime": "^7.5.5",
     "webpack": "^4.39.1",
     "webpack-cli": "^3.3.6",
     "webpack-dev-server": "^3.7.2"

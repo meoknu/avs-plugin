@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
   mode: "development",
-  entry: "./src/plugin.js",
+  entry: "./src/plugin.ts",
   output: {
     path: path.resolve(__dirname, "public"),
     filename: './avs.min.js',
@@ -13,7 +13,7 @@ module.exports = {
   module: {
     rules : [
       {
-        test: /\.js$/,
+        test: /\.ts$/,
         exclude: /node_modules/,
         use: ['babel-loader'],
       }
