@@ -15,7 +15,8 @@
     "express": "^4.17.1",
     "node-turn": "0.0.4",
     "remove": "^0.1.5",
-    "socket.io": "^2.2.0"
+    "socket.io": "^2.2.0",
+    "socket.io-client": "^2.2.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.5.5",
@@ -24,7 +25,10 @@
     "@babel/plugin-proposal-class-properties": "^7.5.5",
     "@babel/plugin-transform-runtime": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
+    "@babel/preset-typescript": "^7.3.3",
     "@babel/runtime": "^7.5.5",
+    "babel-plugin-add-module-exports": "^1.0.2",
+    "typescript": "^3.5.3",
     "webpack": "^4.39.1",
     "webpack-cli": "^3.3.6",
     "webpack-dev-server": "^3.7.2"

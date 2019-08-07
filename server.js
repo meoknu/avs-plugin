@@ -24,6 +24,11 @@ io.on('connection', function(socket){
   socket.on('candidate_available', function(data) {
     socket.broadcast.to(data.to).emit('add_candidate', socket.id, data.message);
   });
+  socket.on('disconnecting', function(){
+    for(prop in socket.rooms) {
+      socket.broadcast.to(prop).emit('disconnect_from_peer', socket.id);
+    }
+  });
   socket.on('candidate', function (message) {
     console.log('candidate');
     console.log(message);

@@ -10,8 +10,10 @@
   Source Page
   <script src="avs.min.js"></script>
   <script>
-    avs = new AVS.default();
-    avs.init();
+    avs = new AVS({
+      room: '_room'
+    });
+    console.log(avs);
   </script>
 </body>
 </html>
