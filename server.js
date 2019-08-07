@@ -10,10 +10,24 @@ io.on('connection', function(socket){
   console.log(socket.id+' connected');
   socket.on('join', function(room) {
     socket.join(room);
+    socket.broadcast.to(room).emit('peer_connected', socket.id);
   });
-  socket.on('candidate', function (candidate) {
+  socket.on('connect_to_peer', function(data) {
+    socket.broadcast.to(data.to).emit('connected_to_peer', socket.id);
+  });
+  socket.on('send_offer', function(data) {
+    socket.broadcast.to(data.to).emit('receive_offer', socket.id, data.message);
+  });
+  socket.on('send_answer', function(data) {
+    socket.broadcast.to(data.to).emit('receive_answer', socket.id, data.message);
+  });
+  socket.on('candidate_available', function(data) {
+    socket.broadcast.to(data.to).emit('add_candidate', socket.id, data.message);
+  });
+  socket.on('candidate', function (message) {
     console.log('candidate');
-    io.to(message.room).emit('candidate', candidate);
+    console.log(message);
+    io.emit('candidate', message);
   });
   socket.on('offer', (message) => {
     console.log('offer');
@@ -32,7 +46,7 @@ io.on('connection', function(socket){
 */
 (function() {
   var server = new Turn({
-    listeningIps: ['192.168.0.11'],
+    listeningIps: ['192.168.0.104'],
     authMech: 'long-term',
     credentials: {
       username: "password"
