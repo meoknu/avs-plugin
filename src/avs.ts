@@ -133,12 +133,12 @@ export default class AVS {
     this.videoElem = document.getElementById('viewBroadcast');
   }
 
-  broadcast() {
+  shareScreen() {
     navigator.mediaDevices.getDisplayMedia({video: true, audio: true}).then((stream) => {
       this.stream = stream;
       this.streaming = true;
       let v = document.createElement('video');
-      v.height = 100;
+      // v.height = 100;
       v.controls = true;
       v.autoplay = true;
       v.srcObject = stream;

@@ -51,7 +51,7 @@ io.on('connection', function(socket){
 */
 (function() {
   var server = new Turn({
-    listeningIps: ['192.168.0.104'],
+    listeningIps: ['192.168.0.11'],
     authMech: 'long-term',
     credentials: {
       username: "password"
