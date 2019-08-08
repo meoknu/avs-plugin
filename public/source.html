@@ -8,9 +8,10 @@
 </head>
 <body>
   Source Page
+  <button onclick="avs.shareScreen()">StartScreenShare</button>
   <script src="avs.min.js"></script>
   <script>
-    avs = new AVS({
+    window.avs = new AVS({
       room: '_room'
     });
     console.log(avs);
