@@ -76,11 +76,12 @@ let attachSocketEventHandlers = (socket, avs) => {
 let attachRPCEventHandlers = (peer, avs) => {
 
   peer.ontrack = (event) => {
-    let v = document.createElement('video');
-    v.height = 100;
-    v.controls = true;
-    v.autoplay = true;
-    v.srcObject = event.streams[0];
+    // let v = document.createElement('video');
+    // v.height = 100;
+    // v.controls = true;
+    // v.autoplay = true;
+    // v.srcObject = event.streams[0];
+    avs.videoElem.srcObject = event.streams[0];
     document.body.appendChild(v);
   }
   peer.onicecandidate = (ice) => {
@@ -113,37 +114,31 @@ export default class AVS {
   peers: any[] = []; // list of RPC connected peers, with their socket id
   videoElem: any; // the HTML Video element by which the stream will be binded
 
-  config = {
-    iceServers: [
-      {
-        urls: ['stun:27.5.7.57']
-      },
-      {
-          urls: ['turn:27.5.7.57'],
-          username: 'username',
-          credential: 'password'
-      }
-    ]
-  }
+  config: any = { iceServers: [] };
 
   constructor(config) {
-    this.socket = io('http://localhost:5000');
-    this.socket.emit('join', '_room');
+    this.socket = io(config.wss);
+    this.socket.emit('join', config.room || '_room');
     attachSocketEventHandlers(this.socket, this);
-    this.videoElem = document.getElementById('viewBroadcast');
+    this.videoElem = config.videoElem || document.getElementById('viewBroadcast');
+    this.config = {
+      iceServers: config.iceServers || []
+    }
+    this.room = config.room;
   }
 
   shareScreen() {
     navigator.mediaDevices.getDisplayMedia({video: true, audio: true}).then((stream) => {
       this.stream = stream;
       this.streaming = true;
-      let v = document.createElement('video');
+      // let v = document.createElement('video');
       // v.height = 100;
-      v.controls = true;
-      v.autoplay = true;
-      v.srcObject = stream;
-      document.body.appendChild(v);
+      // v.controls = true;
+      // v.autoplay = true;
+      // v.srcObject = stream;
+      // document.body.appendChild(v);
       // pc.addStream(stream);
+      this.videoElem.srcObject = stream;
       this.startStreaming();
     });
   }

@@ -4,7 +4,7 @@ module.exports = {
   mode: "development",
   entry: "./src/avs.ts",
   output: {
-    path: path.resolve(__dirname, "public"),
+    path: path.resolve(__dirname, "dist"),
     filename: './avs.min.js',
     sourceMapFilename: "./avs.min.js.map",
     library: "AVS",

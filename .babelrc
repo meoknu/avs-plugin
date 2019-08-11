@@ -3,20 +3,20 @@
   "presets": [
     [
       "@babel/preset-env",
-      {
-        "useBuiltIns": "entry",
-        "corejs": 2,
-      }
+    //   {
+    //     "useBuiltIns": "entry",
+    //     "corejs": 2,
+    //   }
     ], 
     ["@babel/typescript"]
   ],
   "plugins": [
     "@babel/plugin-proposal-class-properties", 
-    [
-      "@babel/plugin-transform-runtime",
-      {
-        "regenerator": true
-      }
-    ]
+    // [
+    //   "@babel/plugin-transform-runtime",
+    //   {
+    //     "regenerator": true
+    //   }
+    // ]
   ]
 }
