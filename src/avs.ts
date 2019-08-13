@@ -176,9 +176,13 @@ export default class AVS {
    */
   shareScreen() {
     if (navigator.getDisplayMedia) {
-      navigator.getDisplayMedia().then(this.startStreaming);
+      navigator.getDisplayMedia().then((stream) => {
+        this.startStreaming(stream);
+      });
     } else if (navigator.mediaDevices.getDisplayMedia) {
-      navigator.mediaDevices.getDisplayMedia().then(this.startStreaming);
+      navigator.mediaDevices.getDisplayMedia().then((stream) => {
+        this.startStreaming(stream);
+      });
     }
   }
 
