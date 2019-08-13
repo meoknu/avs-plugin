@@ -175,22 +175,23 @@ export default class AVS {
    * This method can be called by avs instance to start sharing screen, it will automatically call, `startStreaming` method after the stream is available 
    */
   shareScreen() {
-    var getDisplayMedia = navigator.getDisplayMedia || navigator.mediaDevices.getDisplayMedia;
-    getDisplayMedia({}).then((stream) => {
-      this.stream = stream;
-      this.streaming = true;
-      if(this.videoElem) {
-        this.videoElem.srcObject = stream;
-        this.videoElem.play();
-      }
-      this.startStreaming();
-    });
+    if (navigator.getDisplayMedia) {
+      navigator.getDisplayMedia().then(this.startStreaming);
+    } else if (navigator.mediaDevices.getDisplayMedia) {
+      navigator.mediaDevices.getDisplayMedia().then(this.startStreaming);
+    }
   }
 
   /**
    * start streaming method is used to start stream to all peers which are connected to this peer.
    */
-  startStreaming() {
+  startStreaming(stream) {
+    this.stream = stream;
+    this.streaming = true;
+    if(this.videoElem) {
+      this.videoElem.srcObject = stream;
+      this.videoElem.play();
+    }
     this.peers.forEach((peer) => {
       peer.addStream(this.stream);
       peer.createOffer().then((sdp) => {
