@@ -1,14 +1,54 @@
 // We will require use of socket client library to talk to socket server.
-let io = require('socket.io-client');
+// let io = require('socket.io-client');
 
 // We will attach events to perform some actions when socket server broadcasts messages
 let attachSocketEventHandlers = (socket, avs) => {
+
+  function send(msg) {
+    socket.send(JSON.stringify({
+      message_type: "MESSAGE_BROADCAST",
+      message_details: msg
+    }));
+  }
+
+  /**
+  * 
+  */
+  socket.onopen = () => {
+    // inform other peers in the same room that I am connected
+    send({
+      event: 'peer_connected',
+      data: socket.id
+    });
+    // socket.broadcast.to(room).emit('peer_connected', socket.id);
+  }
+
+  /**
+  * 
+  */
+  socket.onmessage = (e) => {
+    // inform other peers in the same room that I am connected
+    var msg = JSON.parse(e.data);
+    if(msg.event && msg.data) {
+      handleEvent(msg.event, msg.data);
+    }
+  }
+
+  function handleEvent(event, data) {
+    switch (event) {
+      case 'peer_connected':
+        peer_connected(data);
+        break;
+    }
+
+  }
 
   /**
    * When new user connects the same room, all existing members will get notified by `peer_connected` socket event.
    * This will allow them to establish webRTC connection between the two
   */
-  socket.on('peer_connected', (peer_id) => {
+  // socket.on('peer_connected', (peer_id) => {
+  function peer_connected(peer_id) {
     console.log(peer_id);
     const pc = new RTCPeerConnection(avs.config);
     pc.peer_id = peer_id;
@@ -18,10 +58,16 @@ let attachSocketEventHandlers = (socket, avs) => {
       pc.createOffer().then((sdp) => {
         return pc.setLocalDescription(sdp);
       }).then(() => {
-         socket.emit('send_offer', {
-           to: pc.peer_id,
-           message: pc.localDescription
-         });
+        send({
+          event: 'receive_offer',
+          data: {
+            
+          }
+        })
+         // socket.emit('send_offer', {
+         //   to: pc.peer_id,
+         //   message: pc.localDescription
+         // });
       });
     }
     avs.peers.push(pc);
@@ -161,7 +207,8 @@ export default class AVS {
    * }
    */
   constructor(config) {
-    this.socket = io(config.wss);
+    this.socket = new WebSocket(config.wss);
+    this.socket.id = Math.random().toString().slice(2);
     this.socket.emit('join', config.room || '_room');
     attachSocketEventHandlers(this.socket, this);
     this.videoElem = config.videoElem || document.getElementById('viewBroadcast');
