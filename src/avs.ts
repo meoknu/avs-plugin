@@ -176,11 +176,13 @@ export default class AVS {
    */
   shareScreen() {
     var getDisplayMedia = navigator.getDisplayMedia || navigator.mediaDevices.getDisplayMedia;
-    navigator.mediaDevices.getDisplayMedia({video: true, audio: true}).then((stream) => {
+    getDisplayMedia({}).then((stream) => {
       this.stream = stream;
       this.streaming = true;
-      this.videoElem.srcObject = stream;
-      this.videoElem.play();
+      if(this.videoElem) {
+        this.videoElem.srcObject = stream;
+        this.videoElem.play();
+      }
       this.startStreaming();
     });
   }
