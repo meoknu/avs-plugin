@@ -1,13 +1,19 @@
+// We will require use of socket client library to talk to socket server.
 let io = require('socket.io-client');
 
+// We will attach events to perform some actions when socket server broadcasts messages
 let attachSocketEventHandlers = (socket, avs) => {
 
+  /**
+   * When new user connects the same room, all existing members will get notified by `peer_connected` socket event.
+   * This will allow them to establish webRTC connection between the two
+  */
   socket.on('peer_connected', (peer_id) => {
     console.log(peer_id);
     const pc = new RTCPeerConnection(avs.config);
     pc.peer_id = peer_id;
     attachRPCEventHandlers(pc, avs);
-    if(avs.streaming) {
+    if(avs.streaming) { // If current peer is already sharing screen with other peers, this condition will allow streaming to newly connected peer.
       pc.addStream(avs.stream);
       pc.createOffer().then((sdp) => {
         return pc.setLocalDescription(sdp);
@@ -24,6 +30,9 @@ let attachSocketEventHandlers = (socket, avs) => {
     });
   });
 
+  /**
+   * When a peer is connected to another peer, this method will attach webRTC event handler to the connection.
+  */
   socket.on('connected_to_peer', (peer_id) => {
     var pc = new RTCPeerConnection(avs.config);
     pc.peer_id = peer_id;
@@ -31,6 +40,10 @@ let attachSocketEventHandlers = (socket, avs) => {
     avs.peers.push(pc);
   });
 
+  /**
+   * When a peer disconnects with other peers in any way, other peers are notified with `disconnect_from_peer` event.
+   * This will be used for closing the RPC connection between the two.
+   */
   socket.on('disconnect_from_peer', (peer_id) => {
     avs.peers = avs.peers.filter((p) => {
       if(p.peer_id == peer_id) {
@@ -42,6 +55,9 @@ let attachSocketEventHandlers = (socket, avs) => {
     });
   });
 
+  /**
+   * When one peers wants to establish connection with current peer, he sends offer, so current peer can listen to that event by `receive_offer` event. It will also set remote description over webRTC connection, and will send answer for offer by sending `send_answer` event.
+   */
   socket.on('receive_offer', (id, msg) => {
     avs.peers.forEach((peer) => {
       peer.getSenders().forEach((track) => {
@@ -61,11 +77,18 @@ let attachSocketEventHandlers = (socket, avs) => {
     });
   });
 
+  /**
+   * When one peer sends answer of the offer by this peer, This peer can receive the answer by `receive_answer` event. 
+   * This listener is used to set remote description to the webRTC connection
+   */
   socket.on('receive_answer', (id, msg) => {
     var peer = avs.peers.find(p => p.peer_id == id);
     peer.setRemoteDescription(msg);
   });
 
+  /**
+   * `add_candidate` event listener is for listening to ice servers. The turn/stun server will be added to the icecandidate list of the rtc connection.
+   */
   socket.on('add_candidate', (id, msg) => {
     var peer = avs.peers.find(p => p.peer_id == id);
     peer.addIceCandidate(msg);
@@ -73,19 +96,22 @@ let attachSocketEventHandlers = (socket, avs) => {
 
 }
 
+// Listen for RPC events, when some media get streamed, or when new STUN/TURN server is found.
 let attachRPCEventHandlers = (peer, avs) => {
 
+  /**
+   * This listener is used to get stream from the peer who is sharing screen, and add that stream to the video Element of the receiver.
+   */
   peer.ontrack = (event) => {
-    // let v = document.createElement('video');
-    // v.height = 100;
-    // v.controls = true;
-    // v.autoplay = true;
-    // v.srcObject = event.streams[0];
     avs.videoElem.srcObject = event.streams[0];
-    document.body.appendChild(v);
+    avs.videoElem.play().then().catch((e) => {
+      console.error('Media cannot be played automatically without user interaction with page.', e);
+    });
   }
+  /**
+   * when ice candidate of other peers are available, this listener can be used to connect to them, via stun/turn
+   */
   peer.onicecandidate = (ice) => {
-    // console.log(ice.candidate);
     if(ice.candidate && ice.candidate.candidate) {
       avs.socket.emit('candidate_available', {
         to: peer.peer_id,
@@ -114,8 +140,26 @@ export default class AVS {
   peers: any[] = []; // list of RPC connected peers, with their socket id
   videoElem: any; // the HTML Video element by which the stream will be binded
 
-  config: any = { iceServers: [] };
+  config: any = { iceServers: [] }; // ice server configuration, must be setup by user using the plugin, as it will be dynamic
 
+  /**
+   * 
+   * @param config {
+   *  wss: "http://wss.olecons.com", // Your Socket Server URL
+   *  room: "4653423", // Room to which all peers will be connected 
+   *  videoElem: document.getElementById('stream'), // HTML Element where you want to stream video
+   *  iceServers: [
+   *    {
+   *      urls: ['stun:coturn.olecons.com'] // stun url of the coturn server
+   *    },
+   *    {
+   *      urls: ['turns:coturn.olecons.com'], // turns url of the coturn server
+   *      username: 'username', // your turn username
+   *      credential: 'password' // your turn password
+   *    }
+   *  ]
+   * }
+   */
   constructor(config) {
     this.socket = io(config.wss);
     this.socket.emit('join', config.room || '_room');
@@ -127,22 +171,23 @@ export default class AVS {
     this.room = config.room;
   }
 
+  /**
+   * This method can be called by avs instance to start sharing screen, it will automatically call, `startStreaming` method after the stream is available 
+   */
   shareScreen() {
+    var getDisplayMedia = navigator.getDisplayMedia || navigator.mediaDevices.getDisplayMedia;
     navigator.mediaDevices.getDisplayMedia({video: true, audio: true}).then((stream) => {
       this.stream = stream;
       this.streaming = true;
-      // let v = document.createElement('video');
-      // v.height = 100;
-      // v.controls = true;
-      // v.autoplay = true;
-      // v.srcObject = stream;
-      // document.body.appendChild(v);
-      // pc.addStream(stream);
       this.videoElem.srcObject = stream;
+      this.videoElem.play();
       this.startStreaming();
     });
   }
 
+  /**
+   * start streaming method is used to start stream to all peers which are connected to this peer.
+   */
   startStreaming() {
     this.peers.forEach((peer) => {
       peer.addStream(this.stream);
@@ -157,57 +202,4 @@ export default class AVS {
     });
   }
 
-  /* 
-    This function can be called to initialize a session,
-    it should return a random room id,
-    and have socket connected to it.
-    Also create a RPC Connection
-  */
-  // async init() {
-  //   this.room = '121'; // Math.random().toString().substring(2)
-  //   socket = await io();
-  //   await socket.emit('join', this.room);
-  //   this.initListeners();
-  //   this.sspc = new RTCPeerConnection(this.config);
-  //   window.sspc = this.sspc;
-  //   return this.room;
-  // }
-
-  // async shareScreen() {
-  //   const stream = await navigator.mediaDevices.getDisplayMedia();
-  //   this.sspc.addStream(stream);
-  //   const sdp = await this.sspc.createOffer();
-  //   await this.sspc.setLocalDescription(sdp);
-  //   console.log(sdp);
-  //   socket.emit('offer', {
-  //     room: this.room,
-  //     description: this.sspc.localDescription
-  //   });
-  // }
-
-  // initListeners() {
-  //   socket.on('offer', (message) => {
-  //     console.log('offer received');
-  //     console.log(this.sspc.localDescription);
-  //     console.log(message.description);
-  //     console.log(this.sspc.localDescription.sdp == message.description.sdp);
-  //     // if(message.description.sdp != this.sspc.localDescription.sdp) {
-  //       this.sspc.setRemoteDescription(message.description).then(() => {
-  //         return this.sspc.createAnswer()
-  //       }).then((sdp) => {
-  //         return this.sspc.setLocalDescription(sdp)
-  //       }).then(() => {
-  //         socket.emit('answer', {
-  //           room: this.room,
-  //           description: this.sspc.localDescription
-  //         });
-  //       });
-  //     // }
-  //   });
-  //   socket.on('answer', (message) => {
-  //     console.log('got answer');
-  //     console.log(message);
-  //     this.sspc.setRemoteDescription(message.description);
-  //   });
-  // }
 }
