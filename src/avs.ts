@@ -4,21 +4,16 @@
 // We will attach events to perform some actions when socket server broadcasts messages
 let attachSocketEventHandlers = (socket, avs) => {
 
-  function send(msg) {
-    socket.send(JSON.stringify({
-      message_type: "MESSAGE_BROADCAST",
-      message_details: msg
-    }));
-  }
-
   /**
   * 
   */
   socket.onopen = () => {
     // inform other peers in the same room that I am connected
-    send({
+    avs.send({
       event: 'peer_connected',
-      data: socket.id
+      data: {
+        peer_id: socket.id
+      }
     });
     // socket.broadcast.to(room).emit('peer_connected', socket.id);
   }
@@ -29,15 +24,31 @@ let attachSocketEventHandlers = (socket, avs) => {
   socket.onmessage = (e) => {
     // inform other peers in the same room that I am connected
     var msg = JSON.parse(e.data);
+    console.log('receive', msg);
     if(msg.event && msg.data) {
-      handleEvent(msg.event, msg.data);
+      handleEvent(msg.event, msg.data, msg.to);
     }
   }
 
-  function handleEvent(event, data) {
+  function handleEvent(event, data, to=null) {
     switch (event) {
       case 'peer_connected':
-        peer_connected(data);
+        peer_connected(data.peer_id);
+        break;
+      case 'connected_to_peer':
+        if(socket.id == to) { connected_to_peer(data.peer_id); }
+        break;
+      case 'receive_offer':
+        if(socket.id == to) { receive_offer(data.peer_id, data.message); }
+        break;
+      case 'receive_answer':
+        if(socket.id == to) { receive_answer(data.peer_id, data.message); }
+        break;
+      case 'add_candidate':
+        if(socket.id == to) { add_candidate(data.peer_id, data.message); }
+        break;
+      case 'disconnect_from_peer':
+        // todo
         break;
     }
 
@@ -49,7 +60,6 @@ let attachSocketEventHandlers = (socket, avs) => {
   */
   // socket.on('peer_connected', (peer_id) => {
   function peer_connected(peer_id) {
-    console.log(peer_id);
     const pc = new RTCPeerConnection(avs.config);
     pc.peer_id = peer_id;
     attachRPCEventHandlers(pc, avs);
@@ -58,12 +68,14 @@ let attachSocketEventHandlers = (socket, avs) => {
       pc.createOffer().then((sdp) => {
         return pc.setLocalDescription(sdp);
       }).then(() => {
-        send({
+        avs.send({
           event: 'receive_offer',
+          to: peer_id,
           data: {
-            
+            peer_id: socket.id,
+            message: pc.localDescription
           }
-        })
+        });
          // socket.emit('send_offer', {
          //   to: pc.peer_id,
          //   message: pc.localDescription
@@ -71,26 +83,37 @@ let attachSocketEventHandlers = (socket, avs) => {
       });
     }
     avs.peers.push(pc);
-    socket.emit('connect_to_peer', {
-      to: peer_id
+    avs.send({
+      event: 'connected_to_peer',
+      to: peer_id,
+      data: {
+        peer_id: socket.id
+      }
     });
-  });
+    // socket.emit('connect_to_peer', {
+    //   to: peer_id
+    // });
+  };
+  // });
 
   /**
    * When a peer is connected to another peer, this method will attach webRTC event handler to the connection.
   */
-  socket.on('connected_to_peer', (peer_id) => {
+  // socket.on('connected_to_peer', (peer_id) => {
+  function connected_to_peer(peer_id) {
     var pc = new RTCPeerConnection(avs.config);
     pc.peer_id = peer_id;
     attachRPCEventHandlers(pc, avs);
     avs.peers.push(pc);
-  });
+  };
+  // });
 
   /**
    * When a peer disconnects with other peers in any way, other peers are notified with `disconnect_from_peer` event.
    * This will be used for closing the RPC connection between the two.
    */
-  socket.on('disconnect_from_peer', (peer_id) => {
+  // socket.on('disconnect_from_peer', (peer_id) => {
+  function disconnect_from_peer(peer_id) {
     avs.peers = avs.peers.filter((p) => {
       if(p.peer_id == peer_id) {
         p.close();
@@ -99,46 +122,61 @@ let attachSocketEventHandlers = (socket, avs) => {
         return true;
       }
     });
-  });
+  };
+  // });
 
   /**
    * When one peers wants to establish connection with current peer, he sends offer, so current peer can listen to that event by `receive_offer` event. It will also set remote description over webRTC connection, and will send answer for offer by sending `send_answer` event.
    */
-  socket.on('receive_offer', (id, msg) => {
+  // socket.on('receive_offer', (id, msg) => {
+  function receive_offer(peer_id, msg) {
     avs.peers.forEach((peer) => {
       peer.getSenders().forEach((track) => {
         peer.removeTrack(track);
       });
     });
-    var peer = avs.peers.find(p => p.peer_id == id);
+    var peer = avs.peers.find(p => p.peer_id == peer_id);
     peer.setRemoteDescription(msg).then(() => {
       return peer.createAnswer();
     }).then((sdp) => {
       return peer.setLocalDescription(sdp);
     }).then(() => {
-      socket.emit('send_answer', {
+      avs.send({
+        event: 'receive_answer',
         to: peer.peer_id,
-        message: peer.localDescription
+        data: {
+          peer_id: socket.id,
+          message: peer.localDescription
+        }
       });
+      // socket.emit('send_answer', {
+      //   to: peer.peer_id,
+      //   message: peer.localDescription
+      // });
     });
-  });
+  };
+  // });
 
   /**
    * When one peer sends answer of the offer by this peer, This peer can receive the answer by `receive_answer` event. 
    * This listener is used to set remote description to the webRTC connection
    */
-  socket.on('receive_answer', (id, msg) => {
+  // socket.on('receive_answer', (id, msg) => {
+  function receive_answer(id, msg) {
     var peer = avs.peers.find(p => p.peer_id == id);
     peer.setRemoteDescription(msg);
-  });
+  };
+  // });
 
   /**
    * `add_candidate` event listener is for listening to ice servers. The turn/stun server will be added to the icecandidate list of the rtc connection.
    */
-  socket.on('add_candidate', (id, msg) => {
+  // socket.on('add_candidate', (id, msg) => {
+  function add_candidate(id, msg) {
     var peer = avs.peers.find(p => p.peer_id == id);
     peer.addIceCandidate(msg);
-  });
+  };
+  // });
 
 }
 
@@ -159,13 +197,20 @@ let attachRPCEventHandlers = (peer, avs) => {
    */
   peer.onicecandidate = (ice) => {
     if(ice.candidate && ice.candidate.candidate) {
-      avs.socket.emit('candidate_available', {
+      // avs.socket.emit('candidate_available', {
+      //   to: peer.peer_id,
+      //   message: ice.candidate
+      // });
+      avs.send({
+        event: 'add_candidate',
         to: peer.peer_id,
-        message: ice.candidate
+        data: {
+          peer_id: avs.socket.id,
+          message: ice.candidate
+        }
       });
     }
   }
-
 }
 
 /*
@@ -209,7 +254,7 @@ export default class AVS {
   constructor(config) {
     this.socket = new WebSocket(config.wss);
     this.socket.id = Math.random().toString().slice(2);
-    this.socket.emit('join', config.room || '_room');
+    // this.socket.emit('join', config.room || '_room');
     attachSocketEventHandlers(this.socket, this);
     this.videoElem = config.videoElem || document.getElementById('viewBroadcast');
     this.config = {
@@ -248,12 +293,28 @@ export default class AVS {
       peer.createOffer().then((sdp) => {
         return peer.setLocalDescription(sdp);
       }).then(() => {
-         this.socket.emit('send_offer', {
-           to: peer.peer_id,
-           message: peer.localDescription
-         });
+        this.send({
+          event: 'receive_offer',
+          to: peer.peer_id,
+          data: {
+            peer_id: this.socket.id,
+            message: peer.localDescription
+          }    
+        });
+         // this.socket.emit('send_offer', {
+         //   to: peer.peer_id,
+         //   message: peer.localDescription
+         // });
       });
     });
+  }
+
+  send(msg) {
+    console.log('send', msg);
+    this.socket.send(JSON.stringify({
+      message_type: "MESSAGE_BROADCAST",
+      message_details: msg
+    }));
   }
 
 }
