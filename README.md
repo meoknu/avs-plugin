@@ -26,7 +26,7 @@ Now call the AVS initializer function and your screen sharing module is ready.
 ```javascript
 var avs = new AVS({
 	wss: "http://wss.olecons.com", // Your Socket Server URL
-	room: "4653423", // Room to which all peers will be connected 
+	// room: "4653423", // Room to which all peers will be connected // not needed as the wss link will be having room.
 	videoElem: document.getElementById('stream'), // HTML Element where you want to stream video
 	iceServers: [
 		{
