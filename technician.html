@@ -2,26 +2,38 @@
 <html>
 <head>
 	<title></title>
+	<style type="text/css">
+		#streamWrapper {
+			position: relative;
+		}
+		#streamWrapper:after {
+			content: '';
+			position: absolute;
+			top: 0;left:0;right: 0;bottom: 0;
+		}
+	</style>
 </head>
 <body>
-	<video autoplay="" muted="" width="100%" id="stream"></video>
+	<div id="streamWrapper">
+		<video controls="" autoplay="" muted="" width="100%" id="stream" src="video.mp4"></video>
+	</div>
 	<script type="text/javascript" src="src/avs.js"></script>
 	<script type="text/javascript">
-		var avs = new AVS({
-			wss: "wss://brokertest.remotepc.com/proxy/remotehosts?helpdesk=yes&username=xw3nNiljNC&action=connect&token=79dQ1Ic0WbyUMayEeMcAO1WcFfZyqS1GuQSM8OgyAWgPznRr7chzpN7uF8r6Ti6gF6PvsHytGzAZ24U98Q05cDYilSbs4Lkxy8BmwAxIdZjnCoyxIMyOxTBepaUHVADQ7dDJC3vnK4ZMdNNJoqOMylFcgyqxhpPrG8EylGSmtNhFUzg5IlAsiAXuyPwvCSaPTTzGkTvJeG7gzVGjS9VnOWhEHLTeh36Wr60wDheu0Oac7kpIjFqmC5oJlsT6WqX&machine_id=TEST2", // Your Socket Server URL
-			// room: "4653423", // Room to which all peers will be connected 
-			videoElem: document.getElementById('stream'), // HTML Element where you want to stream video
-			iceServers: [
-				{
-					urls: ['stun:avs.olecons.com'] // stun url of the coturn server
-				},
-				{
-					urls: ['turns:avs.olecons.com'], // turns url of the coturn server
-					username: 'username', // your turn username
-					credential: 'password' // your turn password
-				}
-			]
-		});
+		// var avs = new AVS({
+		// 	wss: "wss://brokertest.remotepc.com/proxy/remotehosts?helpdesk=yes&username=xw3nNiljNC&action=connect&token=79dQ1Ic0WbyUMayEeMcAO1WcFfZyqS1GuQSM8OgyAWgPznRr7chzpN7uF8r6Ti6gF6PvsHytGzAZ24U98Q05cDYilSbs4Lkxy8BmwAxIdZjnCoyxIMyOxTBepaUHVADQ7dDJC3vnK4ZMdNNJoqOMylFcgyqxhpPrG8EylGSmtNhFUzg5IlAsiAXuyPwvCSaPTTzGkTvJeG7gzVGjS9VnOWhEHLTeh36Wr60wDheu0Oac7kpIjFqmC5oJlsT6WqX&machine_id=TEST2", // Your Socket Server URL
+		// 	// room: "4653423", // Room to which all peers will be connected 
+		// 	videoElem: document.getElementById('stream'), // HTML Element where you want to stream video
+		// 	iceServers: [
+		// 		{
+		// 			urls: ['stun:avs.olecons.com'] // stun url of the coturn server
+		// 		},
+		// 		{
+		// 			urls: ['turns:avs.olecons.com'], // turns url of the coturn server
+		// 			username: 'username', // your turn username
+		// 			credential: 'password' // your turn password
+		// 		}
+		// 	]
+		// });
 	</script>
 </body>
 </html>
