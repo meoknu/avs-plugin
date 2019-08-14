@@ -37,14 +37,17 @@ var AVS = /** @class */ (function () {
         this.videoElem = config.videoElem || document.getElementById('viewBroadcast');
         
         // Some CSS to prevent right click
-        let overlay = document.createElement('div');
-        this.videoElem.parentElement.style.position = 'relative';
-        overlay.style.position = 'absolute';
-        overlay.style.top = 0;
-        overlay.style.left = 0;
-        overlay.style.bottom = 0;
-        overlay.style.right = 0;
-        this.videoElem.parentElement.append(overlay);
+        if(this.videoElem) {
+            let overlay = document.createElement('div');
+            this.videoElem.parentElement.style.position = 'relative';
+            overlay.style.position = 'absolute';
+            overlay.style.top = 0;
+            overlay.style.left = 0;
+            overlay.style.bottom = 0;
+            overlay.style.right = 0;
+            this.videoElem.parentElement.append(overlay);
+        }
+
 
         this.config = {
             iceServers: config.iceServers || []
@@ -64,6 +67,14 @@ var AVS = /** @class */ (function () {
         else if (navigator.mediaDevices.getDisplayMedia) {
             navigator.mediaDevices.getDisplayMedia().then(function (stream) {
                 _this.startStreaming(stream);
+                stream.oninactive = function() {
+                    _this.send({
+                        event: 'close_stream',
+                        data: {
+                            peer_id: _this.socket.id
+                        }
+                    });
+                }
             });
         }
     };
@@ -159,11 +170,22 @@ var AVS = /** @class */ (function () {
                         add_candidate(data.peer_id, data.message);
                     }
                     break;
+                case 'close_stream':
+                    closeStream(data.peer_id);
+                    break;
                 case 'disconnect_from_peer':
                     // todo
                     break;
             }
         }
+
+        function closeStream (peer_id) {
+            alert('streaming is closed');
+            if(avs.videoElem) {
+                avs.videoElem.srcObject = null;
+            }
+        }
+
         /**
          * When new user connects the same room, all existing members will get notified by `peer_connected` socket event.
          * This will allow them to establish webRTC connection between the two
@@ -293,6 +315,7 @@ var AVS = /** @class */ (function () {
 
     // Listen for RPC events, when some media get streamed, or when new STUN/TURN server is found.
     var attachRPCEventHandlers = function (peer, avs) {
+
         /**
          * This listener is used to get stream from the peer who is sharing screen, and add that stream to the video Element of the receiver.
          */
