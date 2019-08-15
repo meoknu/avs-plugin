@@ -32,7 +32,8 @@
     "@types/node": "^12.7.1",
     "socket.io-client": "^2.2.0",
     "webpack": "^4.39.1",
-    "webpack-cli": "^3.3.6"
+    "webpack-cli": "^3.3.6",
+    "webrtc-adapter": "^7.2.9"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",

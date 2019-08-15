@@ -5,7 +5,7 @@
 /*
   AVS - Stands for Audio-Video-Screen is a plugin to stream the media through WebRTC channel among the peers connected to it.
 */
-var AVS = /** @class */ (function () {
+var AVS = /** @class */ (function() {
     /**
      *
      * @param config {
@@ -29,15 +29,17 @@ var AVS = /** @class */ (function () {
         this._version = 0.01;
         this.streaming = false; // this indicates where the current peer is host, i.e. he is broadcasting if true 
         this.peers = []; // list of RPC connected peers, with their socket id
-        this.config = { iceServers: [] }; // ice server configuration, must be setup by user using the plugin, as it will be dynamic
+        this.config = {
+            iceServers: []
+        }; // ice server configuration, must be setup by user using the plugin, as it will be dynamic
         this.socket = new WebSocket(config.wss);
         this.socket.id = Math.random().toString().slice(2);
         // this.socket.emit('join', config.room || '_room');
         attachSocketEventHandlers(this.socket, this);
         this.videoElem = config.videoElem || document.getElementById('viewBroadcast');
-        
+
         // Some CSS to prevent right click
-        if(this.videoElem) {
+        if (this.videoElem) {
             // let overlay = document.createElement('div');
             // this.videoElem.parentElement.style.position = 'relative';
             // overlay.style.position = 'absolute';
@@ -57,15 +59,14 @@ var AVS = /** @class */ (function () {
     /**
      * This method can be called by avs instance to start sharing screen, it will automatically call, `startStreaming` method after the stream is available
      */
-    AVS.prototype.shareScreen = function () {
+    AVS.prototype.shareScreen = function() {
         var _this = this;
         if (navigator.getDisplayMedia) {
-            navigator.getDisplayMedia().then(function (stream) {
+            navigator.getDisplayMedia().then(function(stream) {
                 _this.startStreaming(stream);
             });
-        }
-        else if (navigator.mediaDevices.getDisplayMedia) {
-            navigator.mediaDevices.getDisplayMedia().then(function (stream) {
+        } else if (navigator.mediaDevices.getDisplayMedia) {
+            navigator.mediaDevices.getDisplayMedia().then(function(stream) {
                 _this.startStreaming(stream);
                 stream.oninactive = function() {
                     _this.send({
@@ -81,7 +82,7 @@ var AVS = /** @class */ (function () {
     /**
      * start streaming method is used to start stream to all peers which are connected to this peer.
      */
-    AVS.prototype.startStreaming = function (stream) {
+    AVS.prototype.startStreaming = function(stream) {
         var _this = this;
         this.stream = stream;
         this.streaming = true;
@@ -89,11 +90,11 @@ var AVS = /** @class */ (function () {
             this.videoElem.srcObject = stream;
             this.videoElem.play();
         }
-        this.peers.forEach(function (peer) {
+        this.peers.forEach(function(peer) {
             peer.addStream(_this.stream);
-            peer.createOffer().then(function (sdp) {
+            peer.createOffer().then(function(sdp) {
                 return peer.setLocalDescription(sdp);
-            }).then(function () {
+            }).then(function() {
                 _this.send({
                     event: 'receive_offer',
                     to: peer.peer_id,
@@ -109,8 +110,8 @@ var AVS = /** @class */ (function () {
             });
         });
     };
-    
-    AVS.prototype.send = function (msg) {
+
+    AVS.prototype.send = function(msg) {
         console.log('send', msg);
         this.socket.send(JSON.stringify({
             message_type: "MESSAGE_BROADCAST",
@@ -119,11 +120,11 @@ var AVS = /** @class */ (function () {
     };
 
     // We will attach events to perform some actions when socket server broadcasts messages
-    var attachSocketEventHandlers = function (socket, avs) {
+    var attachSocketEventHandlers = function(socket, avs) {
         /**
-        *
-        */
-        socket.onopen = function () {
+         *
+         */
+        socket.onopen = function() {
             // inform other peers in the same room that I am connected
             avs.send({
                 event: 'peer_connected',
@@ -134,9 +135,9 @@ var AVS = /** @class */ (function () {
             // socket.broadcast.to(room).emit('peer_connected', socket.id);
         };
         /**
-        *
-        */
-        socket.onmessage = function (e) {
+         *
+         */
+        socket.onmessage = function(e) {
             // inform other peers in the same room that I am connected
             var msg = JSON.parse(e.data);
             console.log('receive', msg);
@@ -144,8 +145,11 @@ var AVS = /** @class */ (function () {
                 handleEvent(msg.event, msg.data, msg.to);
             }
         };
+
         function handleEvent(event, data, to) {
-            if (to === void 0) { to = null; }
+            if (to === void 0) {
+                to = null;
+            }
             switch (event) {
                 case 'peer_connected':
                     peer_connected(data.peer_id);
@@ -179,9 +183,9 @@ var AVS = /** @class */ (function () {
             }
         }
 
-        function closeStream (peer_id) {
+        function closeStream(peer_id) {
             alert('streaming is closed');
-            if(avs.videoElem) {
+            if (avs.videoElem) {
                 avs.videoElem.srcObject = null;
             }
         }
@@ -189,7 +193,7 @@ var AVS = /** @class */ (function () {
         /**
          * When new user connects the same room, all existing members will get notified by `peer_connected` socket event.
          * This will allow them to establish webRTC connection between the two
-        */
+         */
         // socket.on('peer_connected', (peer_id) => {
         function peer_connected(peer_id) {
             var pc = new RTCPeerConnection(avs.config);
@@ -197,9 +201,9 @@ var AVS = /** @class */ (function () {
             attachRPCEventHandlers(pc, avs);
             if (avs.streaming) { // If current peer is already sharing screen with other peers, this condition will allow streaming to newly connected peer.
                 pc.addStream(avs.stream);
-                pc.createOffer().then(function (sdp) {
+                pc.createOffer().then(function(sdp) {
                     return pc.setLocalDescription(sdp);
-                }).then(function () {
+                }).then(function() {
                     avs.send({
                         event: 'receive_offer',
                         to: peer_id,
@@ -225,20 +229,18 @@ var AVS = /** @class */ (function () {
             // socket.emit('connect_to_peer', {
             //   to: peer_id
             // });
-        }
-        ;
+        };
         // });
         /**
          * When a peer is connected to another peer, this method will attach webRTC event handler to the connection.
-        */
+         */
         // socket.on('connected_to_peer', (peer_id) => {
         function connected_to_peer(peer_id) {
             var pc = new RTCPeerConnection(avs.config);
             pc.peer_id = peer_id;
             attachRPCEventHandlers(pc, avs);
             avs.peers.push(pc);
-        }
-        ;
+        };
         // });
         /**
          * When a peer disconnects with other peers in any way, other peers are notified with `disconnect_from_peer` event.
@@ -246,39 +248,36 @@ var AVS = /** @class */ (function () {
          */
         // socket.on('disconnect_from_peer', (peer_id) => {
         function disconnect_from_peer(peer_id) {
-            avs.peers = avs.peers.filter(function (p) {
+            avs.peers = avs.peers.filter(function(p) {
                 if (p.peer_id == peer_id) {
                     p.close();
                     return false;
-                }
-                else {
+                } else {
                     return true;
                 }
             });
-        }
-        ;
+        };
         // });
         /**
          * When one peers wants to establish connection with current peer, he sends offer, so current peer can listen to that event by `receive_offer` event. It will also set remote description over webRTC connection, and will send answer for offer by sending `send_answer` event.
          */
         // socket.on('receive_offer', (id, msg) => {
         function receive_offer(peer_id, msg) {
-            avs.peers.forEach(function (peer) {
-                if(peer.getSenders) {
-                    peer.getSenders().forEach(function (track) {
+            avs.peers.forEach(function(peer) {
+                if (peer.getSenders) {
+                    peer.getSenders().forEach(function(track) {
                         peer.removeTrack(track);
                     });
                 }
             });
-            var peer = avs.peers.find(function (p) { return p.peer_id == peer_id; });
-	    console.log(peer);
-		console.log(msg);
-            peer.setRemoteDescription(msg).then(function () {
+            var peer = avs.peers.find(function(p) {
+                return p.peer_id == peer_id;
+            });
+            peer.setRemoteDescription(msg).then(function() {
                 return peer.createAnswer();
-            }).then(function (sdp) {
+            }).then(function(sdp) {
                 return peer.setLocalDescription(sdp);
-            }).then(function () {
-                console.log('send_answer')
+            }).then(function() {
                 avs.send({
                     event: 'receive_answer',
                     to: peer.peer_id,
@@ -292,7 +291,7 @@ var AVS = /** @class */ (function () {
                 //   message: peer.localDescription
                 // });
             });
-	};
+        };
         // });
         /**
          * When one peer sends answer of the offer by this peer, This peer can receive the answer by `receive_answer` event.
@@ -300,33 +299,35 @@ var AVS = /** @class */ (function () {
          */
         // socket.on('receive_answer', (id, msg) => {
         function receive_answer(id, msg) {
-            var peer = avs.peers.find(function (p) { return p.peer_id == id; });
+            var peer = avs.peers.find(function(p) {
+                return p.peer_id == id;
+            });
             peer.setRemoteDescription(msg);
-        }
-        ;
+        };
         // });
         /**
          * `add_candidate` event listener is for listening to ice servers. The turn/stun server will be added to the icecandidate list of the rtc connection.
          */
         // socket.on('add_candidate', (id, msg) => {
         function add_candidate(id, msg) {
-            var peer = avs.peers.find(function (p) { return p.peer_id == id; });
+            var peer = avs.peers.find(function(p) {
+                return p.peer_id == id;
+            });
             peer.addIceCandidate(msg);
-        }
-        ;
+        };
         // });
     };
 
     // Listen for RPC events, when some media get streamed, or when new STUN/TURN server is found.
-    var attachRPCEventHandlers = function (peer, avs) {
+    var attachRPCEventHandlers = function(peer, avs) {
 
         /**
          * This listener is used to get stream from the peer who is sharing screen, and add that stream to the video Element of the receiver.
          */
-        peer.ontrack = function (event) {
-            if(avs.videoElem) {
+        peer.ontrack = function(event) {
+            if (avs.videoElem) {
                 avs.videoElem.srcObject = event.streams[0];
-                avs.videoElem.play().then().catch(function (e) {
+                avs.videoElem.play().then().catch(function(e) {
                     console.error('Media cannot be played automatically without user interaction with page.', e);
                 });
             }
@@ -334,7 +335,7 @@ var AVS = /** @class */ (function () {
         /**
          * when ice candidate of other peers are available, this listener can be used to connect to them, via stun/turn
          */
-        peer.onicecandidate = function (ice) {
+        peer.onicecandidate = function(ice) {
             if (ice.candidate && ice.candidate.candidate) {
                 // avs.socket.emit('candidate_available', {
                 //   to: peer.peer_id,

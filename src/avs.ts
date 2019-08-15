@@ -1,6 +1,8 @@
 // We will require use of socket client library to talk to socket server.
 // let io = require('socket.io-client');
 
+let adapter = require('webrtc-adapter');
+
 // We will attach events to perform some actions when socket server broadcasts messages
 let attachSocketEventHandlers = (socket, avs) => {
 
@@ -47,11 +49,21 @@ let attachSocketEventHandlers = (socket, avs) => {
       case 'add_candidate':
         if(socket.id == to) { add_candidate(data.peer_id, data.message); }
         break;
+      case 'close_stream':
+        closeStream(data.peer_id);
+        break;
       case 'disconnect_from_peer':
         // todo
         break;
     }
 
+  }
+
+  function closeStream(peer_id) {
+      alert('streaming is closed');
+      if (avs.videoElem) {
+          avs.videoElem.srcObject = null;
+      }
   }
 
   /**
@@ -187,10 +199,12 @@ let attachRPCEventHandlers = (peer, avs) => {
    * This listener is used to get stream from the peer who is sharing screen, and add that stream to the video Element of the receiver.
    */
   peer.ontrack = (event) => {
-    avs.videoElem.srcObject = event.streams[0];
-    avs.videoElem.play().then().catch((e) => {
-      console.error('Media cannot be played automatically without user interaction with page.', e);
-    });
+    if (avs.videoElem) {
+      avs.videoElem.srcObject = event.streams[0];
+      avs.videoElem.play().then().catch((e) => {
+        console.error('Media cannot be played automatically without user interaction with page.', e);
+      });
+    }
   }
   /**
    * when ice candidate of other peers are available, this listener can be used to connect to them, via stun/turn
@@ -257,6 +271,17 @@ export default class AVS {
     // this.socket.emit('join', config.room || '_room');
     attachSocketEventHandlers(this.socket, this);
     this.videoElem = config.videoElem || document.getElementById('viewBroadcast');
+    // Some CSS to prevent right click
+    if (this.videoElem) {
+        // let overlay = document.createElement('div');
+        // this.videoElem.parentElement.style.position = 'relative';
+        // overlay.style.position = 'absolute';
+        // overlay.style.top = 0;
+        // overlay.style.left = 0;
+        // overlay.style.bottom = 0;
+        // overlay.style.right = 0;
+        // this.videoElem.parentElement.append(overlay);
+    }
     this.config = {
       iceServers: config.iceServers || []
     }
@@ -270,10 +295,26 @@ export default class AVS {
     if (navigator.getDisplayMedia) {
       navigator.getDisplayMedia().then((stream) => {
         this.startStreaming(stream);
+        stream.oninactive = () => {
+            this.send({
+                event: 'close_stream',
+                data: {
+                    peer_id: this.socket.id
+                }
+            });
+        }
       });
     } else if (navigator.mediaDevices.getDisplayMedia) {
       navigator.mediaDevices.getDisplayMedia().then((stream) => {
         this.startStreaming(stream);
+        stream.oninactive = () => {
+            this.send({
+                event: 'close_stream',
+                data: {
+                    peer_id: this.socket.id
+                }
+            });
+        }
       });
     }
   }
