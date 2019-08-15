@@ -13,13 +13,14 @@
 			// videoElem: document.getElementById('stream'), // HTML Element where you want to stream video
 			iceServers: [
 				{
-					urls: ['stun:avs.olecons.com'] // stun url of the coturn server
+      				'urls': ['stun:stun.l.google.com:19302']
+					// urls: ['stun:avs.olecons.com'] // stun url of the coturn server
 				},
-				{
-					urls: ['turns:avs.olecons.com'], // turns url of the coturn server
-					username: 'username', // your turn username
-					credential: 'password' // your turn password
-				}
+				// {
+				// 	urls: ['turns:avs.olecons.com'], // turns url of the coturn server
+				// 	username: 'username', // your turn username
+				// 	credential: 'password' // your turn password
+				// }
 			]
 		});
 	</script>

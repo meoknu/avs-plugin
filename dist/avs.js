@@ -38,14 +38,14 @@ var AVS = /** @class */ (function () {
         
         // Some CSS to prevent right click
         if(this.videoElem) {
-            let overlay = document.createElement('div');
-            this.videoElem.parentElement.style.position = 'relative';
-            overlay.style.position = 'absolute';
-            overlay.style.top = 0;
-            overlay.style.left = 0;
-            overlay.style.bottom = 0;
-            overlay.style.right = 0;
-            this.videoElem.parentElement.append(overlay);
+            // let overlay = document.createElement('div');
+            // this.videoElem.parentElement.style.position = 'relative';
+            // overlay.style.position = 'absolute';
+            // overlay.style.top = 0;
+            // overlay.style.left = 0;
+            // overlay.style.bottom = 0;
+            // overlay.style.right = 0;
+            // this.videoElem.parentElement.append(overlay);
         }
 
 
@@ -264,9 +264,11 @@ var AVS = /** @class */ (function () {
         // socket.on('receive_offer', (id, msg) => {
         function receive_offer(peer_id, msg) {
             avs.peers.forEach(function (peer) {
-                peer.getSenders().forEach(function (track) {
-                    peer.removeTrack(track);
-                });
+                if(peer.getSenders) {
+                    peer.getSenders().forEach(function (track) {
+                        peer.removeTrack(track);
+                    });
+                }
             });
             var peer = avs.peers.find(function (p) { return p.peer_id == peer_id; });
             peer.setRemoteDescription(msg).then(function () {
@@ -274,6 +276,7 @@ var AVS = /** @class */ (function () {
             }).then(function (sdp) {
                 return peer.setLocalDescription(sdp);
             }).then(function () {
+                console.log('send_answer')
                 avs.send({
                     event: 'receive_answer',
                     to: peer.peer_id,
@@ -287,8 +290,7 @@ var AVS = /** @class */ (function () {
                 //   message: peer.localDescription
                 // });
             });
-        }
-        ;
+        };
         // });
         /**
          * When one peer sends answer of the offer by this peer, This peer can receive the answer by `receive_answer` event.
@@ -320,10 +322,12 @@ var AVS = /** @class */ (function () {
          * This listener is used to get stream from the peer who is sharing screen, and add that stream to the video Element of the receiver.
          */
         peer.ontrack = function (event) {
-            avs.videoElem.srcObject = event.streams[0];
-            avs.videoElem.play().then()["catch"](function (e) {
-                console.error('Media cannot be played automatically without user interaction with page.', e);
-            });
+            if(avs.videoElem) {
+                avs.videoElem.srcObject = event.streams[0];
+                avs.videoElem.play().then().catch(function (e) {
+                    console.error('Media cannot be played automatically without user interaction with page.', e);
+                });
+            }
         };
         /**
          * when ice candidate of other peers are available, this listener can be used to connect to them, via stun/turn
