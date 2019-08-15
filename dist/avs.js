@@ -271,6 +271,8 @@ var AVS = /** @class */ (function () {
                 }
             });
             var peer = avs.peers.find(function (p) { return p.peer_id == peer_id; });
+	    console.log(peer);
+		console.log(msg);
             peer.setRemoteDescription(msg).then(function () {
                 return peer.createAnswer();
             }).then(function (sdp) {
@@ -290,7 +292,7 @@ var AVS = /** @class */ (function () {
                 //   message: peer.localDescription
                 // });
             });
-        };
+	};
         // });
         /**
          * When one peer sends answer of the offer by this peer, This peer can receive the answer by `receive_answer` event.
