@@ -282,9 +282,7 @@ export default class AVS {
         // overlay.style.right = 0;
         // this.videoElem.parentElement.append(overlay);
     }
-    this.config = {
-      iceServers: config.iceServers || []
-    }
+    this.config = config.iceConfig;
     this.room = config.room;
   }
 
