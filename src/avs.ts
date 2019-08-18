@@ -273,14 +273,14 @@ export default class AVS {
     this.videoElem = config.videoElem || document.getElementById('viewBroadcast');
     // Some CSS to prevent right click
     if (this.videoElem) {
-        // let overlay = document.createElement('div');
-        // this.videoElem.parentElement.style.position = 'relative';
-        // overlay.style.position = 'absolute';
-        // overlay.style.top = 0;
-        // overlay.style.left = 0;
-        // overlay.style.bottom = 0;
-        // overlay.style.right = 0;
-        // this.videoElem.parentElement.append(overlay);
+        let overlay = document.createElement('div');
+        this.videoElem.parentElement.style.position = 'relative';
+        overlay.style.position = 'absolute';
+        overlay.style.top = "0px";
+        overlay.style.left = "0px";
+        overlay.style.bottom = "0px";
+        overlay.style.right = "0px";
+        this.videoElem.parentElement.append(overlay);
     }
     this.config = config.iceConfig;
     this.room = config.room;
@@ -330,6 +330,7 @@ export default class AVS {
     this.peers.forEach((peer) => {
       peer.addStream(this.stream);
       peer.createOffer().then((sdp) => {
+        console.log(sdp);
         return peer.setLocalDescription(sdp);
       }).then(() => {
         this.send({
