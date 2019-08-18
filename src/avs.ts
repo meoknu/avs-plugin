@@ -49,7 +49,6 @@ let attachSocketEventHandlers = (socket, avs) => {
       case 'add_candidate':
         if(socket.id == to) { add_candidate(data.peer_id, data.message); }
         break;
-      case 'close_stream':
         closeStream(data.peer_id);
         break;
       case 'disconnect_from_peer':
@@ -58,7 +57,6 @@ let attachSocketEventHandlers = (socket, avs) => {
     }
 
   }
-
   function closeStream(peer_id) {
       alert('streaming is closed');
       if (avs.videoElem) {
@@ -195,10 +193,23 @@ let attachSocketEventHandlers = (socket, avs) => {
 // Listen for RPC events, when some media get streamed, or when new STUN/TURN server is found.
 let attachRPCEventHandlers = (peer, avs) => {
 
+  function closeStream(peer_id) {
+      alert('streaming is closed');
+      if (avs.videoElem) {
+          avs.videoElem.srcObject = null;
+      }
+  }
+
   /**
    * This listener is used to get stream from the peer who is sharing screen, and add that stream to the video Element of the receiver.
    */
   peer.ontrack = (event) => {
+    console.log(event);
+    event.currentTarget.oniceconnectionstatechange = (state) => {
+      if(state.target.iceConnectionState == 'disconnected') {
+        closeStream(peer.peer_id);
+      }
+    }
     if (avs.videoElem) {
       avs.videoElem.srcObject = event.streams[0];
       avs.videoElem.play().then().catch((e) => {
@@ -330,7 +341,6 @@ export default class AVS {
     this.peers.forEach((peer) => {
       peer.addStream(this.stream);
       peer.createOffer().then((sdp) => {
-        console.log(sdp);
         return peer.setLocalDescription(sdp);
       }).then(() => {
         this.send({
