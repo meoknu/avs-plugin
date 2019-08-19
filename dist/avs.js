@@ -5817,13 +5817,18 @@ var attachRPCEventHandlers = function attachRPCEventHandlers(peer, avs) {
 
 
   peer.ontrack = function (event) {
-    console.log(event);
-
-    event.currentTarget.oniceconnectionstatechange = function (state) {
-      if (state.target.iceConnectionState == 'disconnected') {
+    peer.oniceconnectionstatechange = function (state) {
+      if (peer.iceConnectionState == 'disconnected') {
         closeStream(peer.peer_id);
       }
-    };
+    }; // if(event.currentTarget) {
+    //   event.currentTarget.oniceconnectionstatechange = (state) => {
+    //     if(state.target.iceConnectionState == 'disconnected') {
+    //       closeStream(peer.peer_id);
+    //     }
+    //   }
+    // }
+
 
     if (avs.videoElem) {
       avs.videoElem.srcObject = event.streams[0];

@@ -204,12 +204,18 @@ let attachRPCEventHandlers = (peer, avs) => {
    * This listener is used to get stream from the peer who is sharing screen, and add that stream to the video Element of the receiver.
    */
   peer.ontrack = (event) => {
-    console.log(event);
-    event.currentTarget.oniceconnectionstatechange = (state) => {
-      if(state.target.iceConnectionState == 'disconnected') {
+    peer.oniceconnectionstatechange = (state) => {
+      if(peer.iceConnectionState == 'disconnected') {
         closeStream(peer.peer_id);
       }
     }
+    // if(event.currentTarget) {
+    //   event.currentTarget.oniceconnectionstatechange = (state) => {
+    //     if(state.target.iceConnectionState == 'disconnected') {
+    //       closeStream(peer.peer_id);
+    //     }
+    //   }
+    // }
     if (avs.videoElem) {
       avs.videoElem.srcObject = event.streams[0];
       avs.videoElem.play().then().catch((e) => {
