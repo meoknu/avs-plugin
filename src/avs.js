@@ -31,6 +31,7 @@ var AVS = /** @class */ (function () {
         // this.socket.emit('join', config.room || '_room');
         attachSocketEventHandlers(this.socket, this);
         this.videoElem = config.videoElem || document.getElementById('viewBroadcast');
+        this.peersCount = config.peersCount || document.getElementById('peersCount');
         // Some CSS to prevent right click
         if (this.videoElem) {
             var overlay = document.createElement('div');
@@ -209,6 +210,8 @@ var AVS = /** @class */ (function () {
                 });
             }
             avs.peers.push(pc);
+            window.peers = avs.peers;
+            avs.peersCount.innerHTML = avs.peers.length;
             avs.send({
                 event: 'connected_to_peer',
                 to: peer_id,
@@ -231,6 +234,9 @@ var AVS = /** @class */ (function () {
             pc.peer_id = peer_id;
             attachRPCEventHandlers(pc, avs);
             avs.peers.push(pc);
+            window.peers = avs.peers;
+            avs.peersCount.innerHTML = avs.peers.length;
+            window.peers = avs.peers;
         }
         ;
         // });
@@ -359,4 +365,3 @@ var AVS = /** @class */ (function () {
     };
     return AVS;
 }());
-exports["default"] = AVS;

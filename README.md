@@ -25,7 +25,7 @@ Just download the current version of the compiled file:
 
   
 
--  [/dist/avs.js](https://github.com/meoknu/avs-plugin/raw/master/src/avs.js) - Distributed version - compiled and minified. We will use this single javascript file in our webpage.
+-  [/src/avs.js](https://github.com/meoknu/avs-plugin/raw/master/src/avs.js) - Distributed version - compiled and minified. We will use this single javascript file in our webpage.
 
 ### Include JS
 
