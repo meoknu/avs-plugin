@@ -25,18 +25,18 @@ Just download the current version of the compiled file:
 
   
 
--  [/dist/avs.min.js](https://github.com/meoknu/avs-plugin/raw/master/dist/avs.min.js) - Distributed version - compiled and minified. We will use this single javascript file in our webpage.
+-  [/dist/avs.js](https://github.com/meoknu/avs-plugin/raw/master/src/avs.js) - Distributed version - compiled and minified. We will use this single javascript file in our webpage.
 
 ### Include JS
 
   
 
-Include `avs.min.js` into the footer.
+Include `avs.js` into the footer.
 
 The path may vary according to the directory you have downloaded the file in.
 
 ```html
-<script  src="avs.min.js"></script>
+<script  src="avs.js"></script>
 ```
 
 ### Call the plugin
