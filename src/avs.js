@@ -33,14 +33,14 @@ var AVS = /** @class */ (function () {
         this.videoElem = config.videoElem || document.getElementById('viewBroadcast');
         // Some CSS to prevent right click
         if (this.videoElem) {
-            // let overlay = document.createElement('div');
-            // this.videoElem.parentElement.style.position = 'relative';
-            // overlay.style.position = 'absolute';
-            // overlay.style.top = 0;
-            // overlay.style.left = 0;
-            // overlay.style.bottom = 0;
-            // overlay.style.right = 0;
-            // this.videoElem.parentElement.append(overlay);
+            var overlay = document.createElement('div');
+            this.videoElem.parentElement.style.position = 'relative';
+            overlay.style.position = 'absolute';
+            overlay.style.top = "0px";
+            overlay.style.left = "0px";
+            overlay.style.bottom = "0px";
+            overlay.style.right = "0px";
+            this.videoElem.parentElement.append(overlay);
         }
         this.config = config.iceConfig;
         this.room = config.room;
@@ -115,7 +115,6 @@ var AVS = /** @class */ (function () {
             message_details: msg
         }));
     };
-
     // We will attach events to perform some actions when socket server broadcasts messages
     function attachSocketEventHandlers (socket, avs) {
         /**
@@ -168,7 +167,6 @@ var AVS = /** @class */ (function () {
                         add_candidate(data.peer_id, data.message);
                     }
                     break;
-                case 'close_stream':
                     closeStream(data.peer_id);
                     break;
                 case 'disconnect_from_peer':
@@ -310,10 +308,28 @@ var AVS = /** @class */ (function () {
     };
     // Listen for RPC events, when some media get streamed, or when new STUN/TURN server is found.
     function attachRPCEventHandlers (peer, avs) {
+        function closeStream(peer_id) {
+            alert('streaming is closed');
+            if (avs.videoElem) {
+                avs.videoElem.srcObject = null;
+            }
+        }
         /**
          * This listener is used to get stream from the peer who is sharing screen, and add that stream to the video Element of the receiver.
          */
         peer.ontrack = function (event) {
+            peer.oniceconnectionstatechange = function (state) {
+                if (peer.iceConnectionState == 'disconnected') {
+                    closeStream(peer.peer_id);
+                }
+            };
+            // if(event.currentTarget) {
+            //   event.currentTarget.oniceconnectionstatechange = (state) => {
+            //     if(state.target.iceConnectionState == 'disconnected') {
+            //       closeStream(peer.peer_id);
+            //     }
+            //   }
+            // }
             if (avs.videoElem) {
                 avs.videoElem.srcObject = event.streams[0];
                 avs.videoElem.play().then()["catch"](function (e) {
@@ -341,6 +357,6 @@ var AVS = /** @class */ (function () {
             }
         };
     };
-
     return AVS;
 }());
+exports["default"] = AVS;

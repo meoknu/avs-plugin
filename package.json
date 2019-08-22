@@ -5,8 +5,7 @@
   "main": "webpack.config.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack",
-    "build": "webpack --mode production"
+    "start": "webpack --mode development & webpack --mode production"
   },
   "repository": {
     "type": "git",
@@ -29,8 +28,8 @@
   },
   "homepage": "https://github.com/meoknu/avs-plugin#readme",
   "dependencies": {
-    "@types/node": "^12.7.1",
     "socket.io-client": "^2.2.0",
+    "typescript": "^3.5.3",
     "webpack": "^4.39.1",
     "webpack-cli": "^3.3.6",
     "webrtc-adapter": "^7.2.9"
@@ -40,6 +39,7 @@
     "@babel/plugin-proposal-class-properties": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
     "@babel/preset-typescript": "^7.3.3",
+    "@types/node": "^12.7.2",
     "babel-loader": "^8.0.6"
   }
 }
