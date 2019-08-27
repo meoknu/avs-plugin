@@ -66,15 +66,20 @@ var AVS = /** @class */ (function () {
         }
         else if (navigator.mediaDevices.getDisplayMedia) {
             navigator.mediaDevices.getDisplayMedia().then(function (stream) {
-                _this.startStreaming(stream);
-                stream.oninactive = function () {
-                    _this.send({
-                        event: 'close_stream',
-                        data: {
-                            peer_id: _this.socket.id
-                        }
-                    });
-                };
+                stream.getVideoTracks()[0].applyConstraints({
+                    mediaSource: "screen", frameRate: { min: 10, max: 15 },
+                }).then(() => {
+                    console.log(stream.getVideoTracks()[0]);
+                    _this.startStreaming(stream);
+                    stream.oninactive = function () {
+                        _this.send({
+                            event: 'close_stream',
+                            data: {
+                                peer_id: _this.socket.id
+                            }
+                        });
+                    };
+                });
             });
         }
     };
