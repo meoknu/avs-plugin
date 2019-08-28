@@ -25,6 +25,7 @@ var AVS = /** @class */ (function () {
         this._version = 0.01;
         this.streaming = false; // this indicates where the current peer is host, i.e. he is broadcasting if true 
         this.peers = []; // list of RPC connected peers, with their socket id
+        this.users = [];
         this.config = { iceServers: [] }; // ice server configuration, must be setup by user using the plugin, as it will be dynamic
         this.socket = new WebSocket(config.wss);
         this.socket.id = Math.random().toString().slice(2);
@@ -51,6 +52,11 @@ var AVS = /** @class */ (function () {
      */
     AVS.prototype.shareScreen = function () {
         var _this = this;
+        console.log(this);
+        if(this.users.length == 0) {
+            alert("Wait until the technician is online");
+            return;
+        }
         if (navigator.getDisplayMedia) {
             navigator.getDisplayMedia().then(function (stream) {
                 _this.startStreaming(stream);
@@ -143,6 +149,15 @@ var AVS = /** @class */ (function () {
             // inform other peers in the same room that I am connected
             var msg = JSON.parse(e.data);
             console.log('receive', msg);
+            if(msg.members) {
+                avs.users = msg.members;
+            }
+            if(msg.message == 'left') {
+                avs.users = avs.users.filter(user => { if(user != msg.machine_id) return user; });
+            }
+            if(msg.message == 'joined') {
+                avs.users.push(msg.machine_id);
+            }
             if (msg.event && msg.data) {
                 handleEvent(msg.event, msg.data, msg.to);
             }
@@ -216,7 +231,7 @@ var AVS = /** @class */ (function () {
             }
             avs.peers.push(pc);
             window.peers = avs.peers;
-            avs.peersCount.innerHTML = avs.peers.length;
+            avs.peersCount.innerHTML = avs.users.length;
             avs.send({
                 event: 'connected_to_peer',
                 to: peer_id,
@@ -240,7 +255,7 @@ var AVS = /** @class */ (function () {
             attachRPCEventHandlers(pc, avs);
             avs.peers.push(pc);
             window.peers = avs.peers;
-            avs.peersCount.innerHTML = avs.peers.length;
+            avs.peersCount.innerHTML = avs.users.length;
             window.peers = avs.peers;
         }
         ;
